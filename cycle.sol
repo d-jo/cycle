@@ -2,6 +2,7 @@ pragma solidity ^0.4.2;
 
 contract owned {
     address public owner;
+    address public manager;
 
     function owned() {
         owner = msg.sender;
@@ -10,6 +11,12 @@ contract owned {
     modifier onlyOwner {
         if (msg.sender != owner) throw;
         _;
+    }
+
+    modifier onlyManager {
+	if (msg.sender != ownder) throw;
+	if (msg.sender != manager) throw;
+	_;
     }
 
     function transferOwnership(address newOwner) onlyOwner {
@@ -96,6 +103,8 @@ contract Cyc is owned, token {
 
     mapping (address => bool) public frozenAccount;
 
+    mapping (address => bytes[]) public jobQueue;
+
     /* This generates a public event on the blockchain that will notify clients */
     event FrozenFunds(address target, bool frozen);
 
@@ -130,19 +139,18 @@ contract Cyc is owned, token {
         return true;
     }
 
-    function reward(address[] targets, uint256 delta) onlyOwner {
-        for(uint i = 0; i < targets.length; i++) {
-            balanceOf[targets[i]] += delta;
-            totalSupply += delta;
-            Transfer(0, this, delta);
-            Transfer(this, targets[i], delta);
-        }
+    function freezeAccount(address _target, bool _freeze) onlyOwner {
+        frozenAccount[_target] = _freeze;
+        FrozenFunds(_target, _freeze);
     }
-    
 
-    function freezeAccount(address target, bool freeze) onlyOwner {
-        frozenAccount[target] = freeze;
-        FrozenFunds(target, freeze);
+    function mint(address _target, uint256 _value) onlyManager returns (bool success) {
+	if (frozenAccount[_target]) throw;
+	if (balanceOf[_target] + _value < balanceOf[_target]) throw;
+	totalSupply += _value;
+	balanceOf[_target] += _value;
+	return true;
     }
+
 
 }

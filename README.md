@@ -1,12 +1,5 @@
 # Cycle
 
-### Abstract
-Cycle is a cryptocurrency-based decentralized cloud computer designed to harness the power of a proof of work (PoW) formula to offer private and affordable distributed computing.
-
-### Read more
-https://docs.google.com/document/d/1BjvhSGzoAEibKbbKI5le2jfyhSQQZ4FSBFtxZN_QL7Q/edit?usp=sharing
-
-
 
 ###### License
 ```
