@@ -8,8 +8,10 @@ var (
 	TIMEOUT_SECONDS = 60
 )
 
+type address string
+
 type Miner struct {
-	Id                 int
+	Id                 address
 	AssignedJobs       []int
 	LastAssignmentTime int
 	CompletedJobs      int
@@ -19,10 +21,10 @@ type Job struct {
 	Id           int
 	CreationTime int
 	SolvedTime   int
-	Priority     int
+	priority     int
 	index        int
 	Data         *[]byte
-	Solutions    map[int][]byte
+	Solutions    map[address]*[]byte
 }
 
 type JobDispatcher []*Job
@@ -48,10 +50,10 @@ func (jd *JobDispatcher) Push(x interface{}) {
 
 func (jd *JobDispatcher) Pop() interface{} {
 	old := *jd
-	length := len(old)
-	ret := old[len-1]
+	length := old.Len()
+	ret := old[length-1]
 	ret.index = -1
-	*jd = old[0 : len-1]
+	*jd = old[0 : length-1]
 	return ret
 
 }
