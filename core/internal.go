@@ -27,6 +27,18 @@ type Job struct {
 
 type JobDispatcher []*Job
 
+func (jd JobDispatcher) Len() int { return len(jd) }
+
+func (jd JobDispatcher) Less(i, j int) bool {
+	return jd[i].priority > jd[j].priority
+}
+
+func (jd JobDispatcher) Swap(i, j int) {
+	jd[i], jd[j] = jd[j], jd[i]
+	jd[i].index = i
+	jd[j].index = j
+}
+
 func (jd *JobDispatcher) Push(x interface{}) {
 	len := len(*jd)
 	job := x.(*Job)
@@ -41,4 +53,10 @@ func (jd *JobDispatcher) Pop() interface{} {
 	ret.index = -1
 	*jd = old[0 : len-1]
 	return ret
+
+}
+
+func (jd *JobDispatcher) updatePriority(job *Job, priority int) {
+	job.priority = priority
+	heap.Fix(jd, job.index)
 }
