@@ -40,6 +40,7 @@ contract token {
 
     /* This generates a public event on the blockchain that will notify clients */
     event Transfer(address indexed from, address indexed to, uint256 value);
+    event Mint(address indexed to, uint256 value);
 
     /* Initializes contract with initial supply tokens to the creator of the contract */
     function token(
@@ -149,6 +150,7 @@ contract Cyc is owned, token {
 	if (balanceOf[_target] + _value < balanceOf[_target]) throw;
 	totalSupply += _value;
 	balanceOf[_target] += _value;
+	Mint(_target, _value)
 	return true;
     }
 
