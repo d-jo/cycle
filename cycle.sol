@@ -158,7 +158,7 @@ contract Cyc is owned, token {
 
     function submitJob(bytes4 memory _operation, bytes memory _mat1, _mat2) returns (bool success) {
 	if (frozenAccount[msg.sender]) throw;
-	uint size = 32 + 8 + 8 + 4 + _mat1.length + _mat2.length;
+	uint memory size = 196 + _mat1.length + _mat2.length;
 	if (balanceOf[msg.sender] < cost(size) throw;
 	
 	bytes32 memory jobid = keccak256(msg.sender, jobs.length, VERSION, block.timestamp, _operation, _mat1, _mat2);
