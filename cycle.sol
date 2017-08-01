@@ -158,17 +158,19 @@ contract Cyc is owned, token {
 
     function submitJob(bytes4 memory _operation, bytes memory _mat1, _mat2) returns (bool success) {
 	if (frozenAccount[msg.sender]) throw;
-	// 				SUB  VER TME OPR  ---DATA....(numpy matrix format string https://docs.scipy.org/doc/numpy/reference/generated/numpy.matrix.html)..............
 	uint size = 32 + 8 + 8 + 4 + _mat1.length + _mat2.length;
 	if (balanceOf[msg.sender] < cost(size) throw;
+	
 	bytes32 memory jobid = keccak256(msg.sender, jobs.length, VERSION, block.timestamp, _operation, _mat1, _mat2);
 	bytes memory fulljob = new bytes(size);
 	uint memory size1 = _mat1.length;
 	uint memory size2 = _mat2.length;
 	uint memory offset = 0;
-	for(uint i = 0; i < msg.sender; i++) fullJob[offset + i] = msg.sender[i];
-	offset += msg.sender.length;
 	assembly {
+		// STORE SENDER
+		mstore(add(fulljob, add(mload(offset), 32)), msg.sender)
+		// MOVE OFFSET
+		mstore(add(offset, 32), add(mload(offset), 32))
 		// STORE VERSION
 		mstore(add(fulljob, add(mload(offset), 32)), VERSION)
 		// MOVE OFFSET
