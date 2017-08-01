@@ -5,7 +5,7 @@ contract owned {
     address public manager;
 
     function owned() {
-        owner = msg.sender;
+      owner = msg.sender;
     }
 
     modifier onlyOwner {
@@ -102,12 +102,19 @@ contract token {
 
 contract Cyc is owned, token {
 
+    uint8 VERSION = 1;
+    uint8 COST_PER_BYTE = 1;
+    
+
     mapping (address => bool) public frozenAccount;
 
-    mapping (address => bytes[]) public jobQueue;
+    mapping (bytes32 => bytes) public jobs;
+    mapping (bytes32 => address[]) private delegations;
 
     /* This generates a public event on the blockchain that will notify clients */
     event FrozenFunds(address target, bool frozen);
+    event JobCompleted(bytes32 indexed job, address[] indexed solvers, uint256 reward);
+    
 
     /* Initializes contract with initial supply tokens to the creator of the contract */
     function Cyc(
@@ -144,6 +151,59 @@ contract Cyc is owned, token {
         frozenAccount[_target] = _freeze;
         FrozenFunds(_target, _freeze);
     }
+
+    function cost(uint numOfBytes) returns (uint cost) {
+	return numOfBytes * COST_PER_BYTE;
+    }
+
+    function submitJob(bytes4 memory _operation, bytes memory _mat1, _mat2) returns (bool success) {
+	if (frozenAccount[msg.sender]) throw;
+	// 				SUB  VER TME OPR  ---DATA....(numpy matrix format string https://docs.scipy.org/doc/numpy/reference/generated/numpy.matrix.html)..............
+	uint size = 32 + 8 + 8 + 4 + _mat1.length + _mat2.length;
+	if (balanceOf[msg.sender] < cost(size) throw;
+	bytes32 memory jobid = keccak256(msg.sender, jobs.length, VERSION, block.timestamp, _operation, _mat1, _mat2);
+	bytes memory fulljob = new bytes(size);
+	uint memory size1 = _mat1.length;
+	uint memory size2 = _mat2.length;
+	uint memory offset = 0;
+	for(uint i = 0; i < msg.sender; i++) fullJob[offset + i] = msg.sender[i];
+	offset += msg.sender.length;
+	assembly {
+		// STORE VERSION
+		mstore(add(fulljob, add(mload(offset), 32)), VERSION)
+		// MOVE OFFSET
+		mstore(add(offset, 32), add(mload(offset), 32))
+		// STORE TIMESTAMP
+		mstore(add(fulljob, add(mload(offset), 32)), block.timestamp)
+		// MOVE OFFSET
+		mstore(add(offset, 32), add(mload(offset), 32))
+		// STORE OPERATION
+		mstore(add(fulljob, add(mload(offset), 4)), _operation)
+		// MOVE OFFSET
+		mstore(add(offset, 32), add(mload(offset), 4))
+		// STORE SIZE1
+		mstore(add(fulljob, add(mload(offset), 32)), size1)
+		// MOVE OFFSET
+		mstore(add(offset, 32), add(mload(offset), 32))
+		// STORE SIZE2
+		mstore(add(fulljob, add(mload(offset), 32)), size2)
+		// MOVE OFFSET
+		mstore(add(offset, 32), add(mload(offset), 32))
+		// STORE DATA1
+		mstore(add(fulljob, add(mload(offset), mload(size1))), _mat1)
+		// MOVE OFFSET (d=mload(size1))
+		mstore(add(offset, 32), add(mload(offset), mload(size1)))
+		// DATA2
+		mstore(add(fulljob, add(mload(offset), mload(size2))), _mat2)
+		// MOVE OFFSET (d=mload(size2))
+		mstore(add(offset, 32), add(mload(offset), mload(size2)))
+		// STORE JOBID
+		mstore(add(fulljob, add(mload(offset), 32)), jobid)
+		// wtf did I just write...?
+	}
+
+    }
+
 
     function mint(address _target, uint256 _value) onlyManager returns (bool success) {
 	if (frozenAccount[_target]) throw;
