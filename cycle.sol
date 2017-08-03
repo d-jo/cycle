@@ -108,8 +108,7 @@ contract Cyc is owned, token {
 
     mapping (address => bool) public frozenAccount;
 
-    mapping (bytes32 => bytes) public jobs;
-    mapping (bytes32 => address[]) private delegations;
+    mapping (bytes32 => bytes) storage public jobs;
 
     /* This generates a public event on the blockchain that will notify clients */
     event FrozenFunds(address target, bool frozen);
@@ -156,56 +155,69 @@ contract Cyc is owned, token {
 	return numOfBytes * COST_PER_BYTE;
     }
 
-    function submitJob(bytes4 memory _operation, bytes memory _mat1, _mat2) returns (bool success) {
+    function submitJob(bytes4 memory _operation, bytes memory _mat1, _mat2, uint _extraReward) returns (bool success) {
 	if (frozenAccount[msg.sender]) throw;
 	uint memory size = 196 + _mat1.length + _mat2.length;
-	if (balanceOf[msg.sender] < cost(size) throw;
+	if (balanceOf[msg.sender] < cost(size) + _extraReward) throw;
 	
 	bytes32 memory jobid = keccak256(msg.sender, jobs.length, VERSION, block.timestamp, _operation, _mat1, _mat2);
 	bytes memory fulljob = new bytes(size);
 	uint memory size1 = _mat1.length;
 	uint memory size2 = _mat2.length;
 	uint memory offset = 0;
+	
 	assembly {
-		// STORE SENDER
+		// --------------------------
+		// the goal of this block is to construct the full job.
+		// it is done in assembly to speed up the process for more
+		// fine tuned control. All it does copy data, move offset by 
+		// the size of data, then repeat. 
+		// --------------------------
+		// OPERATION    ------- BYTES
+		// STORE SENDER 	(32b)
 		mstore(add(fulljob, add(mload(offset), 32)), msg.sender)
-		// MOVE OFFSET
+		// MOVE OFFSET 		(32)
 		mstore(add(offset, 32), add(mload(offset), 32))
-		// STORE VERSION
+		// STORE VERSION 	(32b)
 		mstore(add(fulljob, add(mload(offset), 32)), VERSION)
-		// MOVE OFFSET
+		// MOVE OFFSET 		(32)
 		mstore(add(offset, 32), add(mload(offset), 32))
-		// STORE TIMESTAMP
+		// STORE TIMESTAMP 	(32b)
 		mstore(add(fulljob, add(mload(offset), 32)), block.timestamp)
-		// MOVE OFFSET
+		// MOVE OFFSET 		(32)
 		mstore(add(offset, 32), add(mload(offset), 32))
-		// STORE OPERATION
+		// STORE OPERATION 	(4b)
 		mstore(add(fulljob, add(mload(offset), 4)), _operation)
-		// MOVE OFFSET
+		// MOVE OFFSET 		(4)
 		mstore(add(offset, 32), add(mload(offset), 4))
-		// STORE SIZE1
+		// STORE SIZE1 		(32b)
 		mstore(add(fulljob, add(mload(offset), 32)), size1)
-		// MOVE OFFSET
+		// MOVE OFFSET 		(32)
 		mstore(add(offset, 32), add(mload(offset), 32))
-		// STORE SIZE2
+		// STORE SIZE2 		(32b)
 		mstore(add(fulljob, add(mload(offset), 32)), size2)
-		// MOVE OFFSET
+		// MOVE OFFSET 		(32)
 		mstore(add(offset, 32), add(mload(offset), 32))
-		// STORE DATA1
+		// STORE DATA1		(size1b)
 		mstore(add(fulljob, add(mload(offset), mload(size1))), _mat1)
-		// MOVE OFFSET (d=mload(size1))
+		// MOVE OFFSET 		(size1)
 		mstore(add(offset, 32), add(mload(offset), mload(size1)))
-		// DATA2
+		// STORE DATA2		(size2b)
 		mstore(add(fulljob, add(mload(offset), mload(size2))), _mat2)
-		// MOVE OFFSET (d=mload(size2))
+		// MOVE OFFSET 		(size2)
 		mstore(add(offset, 32), add(mload(offset), mload(size2)))
-		// STORE JOBID
+		// STORE JOBID		(32b)
 		mstore(add(fulljob, add(mload(offset), 32)), jobid)
-		// wtf did I just write...?
 	}
-
+	
+	jobs[jobid] = fulljob;
+	
+	return true;
     }
 
+    function getJob() external returns (bytes32 jobid, bytes jobdata) {
+	
+    }
 
     function mint(address _target, uint256 _value) onlyManager returns (bool success) {
 	if (frozenAccount[_target]) throw;
