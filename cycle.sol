@@ -104,15 +104,18 @@ contract Cyc is owned, token {
 
     uint8 VERSION = 1;
     uint8 COST_PER_BYTE = 1;
-    
+    uint256 OpenJobs = 0;
 
     mapping (address => bool) public frozenAccount;
 
     mapping (bytes32 => bytes) storage public jobs;
+    mapping (bytes32 => address) storage public jobOwners;
+    
 
     /* This generates a public event on the blockchain that will notify clients */
     event FrozenFunds(address target, bool frozen);
-    event JobCompleted(bytes32 indexed job, address[] indexed solvers, uint256 reward);
+    event JobOpened(address indexed id, address indexed creator, uint bounty);
+    event JobClosed(address indexed id, bool completed);
     
 
     /* Initializes contract with initial supply tokens to the creator of the contract */
@@ -155,10 +158,15 @@ contract Cyc is owned, token {
 	return numOfBytes * COST_PER_BYTE;
     }
 
-    function submitJob(bytes4 memory _operation, bytes memory _mat1, _mat2, uint _extraReward) returns (bool success) {
+    function SubmitJobSolution(bytes32 memory _address, bytes memory _matsol) {
+	if (frozenAccount[msg.sender]) throw;
+
+    }
+
+    function OpenJob(bytes4 memory _operation, bytes memory _mat1, _mat2) returns (bool success) {
 	if (frozenAccount[msg.sender]) throw;
 	uint memory size = 196 + _mat1.length + _mat2.length;
-	if (balanceOf[msg.sender] < cost(size) + _extraReward) throw;
+	if (balanceOf[msg.sender] < cost(size)) throw;
 	
 	bytes32 memory jobid = keccak256(msg.sender, jobs.length, VERSION, block.timestamp, _operation, _mat1, _mat2);
 	bytes memory fulljob = new bytes(size);
@@ -211,12 +219,15 @@ contract Cyc is owned, token {
 	}
 	
 	jobs[jobid] = fulljob;
-	
+	jobOwners[msg.sender] = jobid;
+	JobOpened(jobid, msg.sender, cost(size));
+	OpenJobs += 1;
 	return true;
     }
 
-    function getJob() external returns (bytes32 jobid, bytes jobdata) {
-	
+    function CloseJob(address _target) returns (bool success) {
+	assembly {
+	}
     }
 
     function mint(address _target, uint256 _value) onlyManager returns (bool success) {
