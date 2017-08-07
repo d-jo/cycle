@@ -110,12 +110,13 @@ contract Cyc is owned, token {
 
     mapping (bytes32 => bytes) storage public jobs;
     mapping (bytes32 => address) storage public jobOwners;
+    mapping (bytes32 => uint[]) storage public jobAttributes;
     
 
     /* This generates a public event on the blockchain that will notify clients */
     event FrozenFunds(address target, bool frozen);
-    event JobOpened(address indexed id, address indexed creator, uint bounty);
-    event JobClosed(address indexed id, bool completed);
+    event JobOpened(address indexed id, address indexed creator, uint bounty, bytes data);
+    event JobClosed(address indexed id, address indexed destroyer, uint bounty, bytes solution);
     
 
     /* Initializes contract with initial supply tokens to the creator of the contract */
@@ -158,15 +159,11 @@ contract Cyc is owned, token {
 	return numOfBytes * COST_PER_BYTE;
     }
 
-    function SubmitJobSolution(bytes32 memory _address, bytes memory _matsol) {
-	if (frozenAccount[msg.sender]) throw;
-
-    }
-
     function OpenJob(bytes4 memory _operation, bytes memory _mat1, _mat2) returns (bool success) {
 	if (frozenAccount[msg.sender]) throw;
 	uint memory size = 196 + _mat1.length + _mat2.length;
-	if (balanceOf[msg.sender] < cost(size)) throw;
+	uint memory cost = cost(size);
+	if (balanceOf[msg.sender] < cost) throw;
 	
 	bytes32 memory jobid = keccak256(msg.sender, jobs.length, VERSION, block.timestamp, _operation, _mat1, _mat2);
 	bytes memory fulljob = new bytes(size);
@@ -220,13 +217,23 @@ contract Cyc is owned, token {
 	
 	jobs[jobid] = fulljob;
 	jobOwners[msg.sender] = jobid;
-	JobOpened(jobid, msg.sender, cost(size));
+	JobOpened(jobid, msg.sender, cost);
 	OpenJobs += 1;
 	return true;
     }
 
-    function CloseJob(address _target) returns (bool success) {
+    function CloseJob(address _target, bytes solution) returns (bool success) {
+	if (msg.sender == jobOwners[msg.sender]) {
+		if(solution.length == 0) {
+			jobs[_target] = 0;
+			JobClosed(_target, msg.sender, )
+			//close job and return coins
+		}
+		// cant submit solution to own job
+		throw;
+	}
 	assembly {
+
 	}
     }
 
