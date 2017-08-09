@@ -68,16 +68,6 @@ contract token {
     /* Allow another contract to spend some tokens in your behalf */
     function approve(address _spender, uint256 _value)
         returns (bool success) {
-        allowance[msg.sender][_spender] = _value;
-        return true;
-    }
-
-    /* Approve and then communicate the approved contract in a single tx */
-    function approveAndCall(address _spender, uint256 _value, bytes _extraData)
-        returns (bool success) {    
-        tokenRecipient spender = tokenRecipient(_spender);
-        if (approve(_spender, _value)) {
-            spender.receiveApproval(msg.sender, _value, this, _extraData);
             return true;
         }
     }
@@ -110,7 +100,7 @@ contract Cyc is owned, token {
 
     mapping (bytes32 => bytes) storage public jobs;
     mapping (bytes32 => address) storage public jobOwners;
-    mapping (bytes32 => uint[]) storage public jobAttributes;
+    mapping (bytes32 => uint256[4]) storage public jobAttributes;
     
 
     /* This generates a public event on the blockchain that will notify clients */
@@ -217,17 +207,20 @@ contract Cyc is owned, token {
 	
 	jobs[jobid] = fulljob;
 	jobOwners[msg.sender] = jobid;
+	jobAttributes[jobid] = [uint256(cost), size1, size2, block.timestamp];
 	JobOpened(jobid, msg.sender, cost);
 	OpenJobs += 1;
 	return true;
     }
 
-    function CloseJob(address _target, bytes solution) returns (bool success) {
+    function CloseJob(address _target, bytes _solution) returns (bool success) {
 	if (msg.sender == jobOwners[msg.sender]) {
-		if(solution.length == 0) {
+		if(_solution.length == 0) {
 			jobs[_target] = 0;
-			JobClosed(_target, msg.sender, )
-			//close job and return coins
+			jobOwners[_target] = 0;
+			JobClosed(_target, msg.sender, jobAttributes[_target][0], _solution);
+			mint(msg.sender, jobAttributes[_target][0]);
+			jobAttributes[_target] = 0;
 		}
 		// cant submit solution to own job
 		throw;
