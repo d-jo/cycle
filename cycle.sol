@@ -216,10 +216,11 @@ contract Cyc is owned, token {
     function CloseJob(address _target, bytes _solution) returns (bool success) {
 	if (msg.sender == jobOwners[msg.sender]) {
 		if(_solution.length == 0) {
+			// to close one's own job, send an empty solution to the job
 			jobs[_target] = 0;
 			jobOwners[_target] = 0;
 			JobClosed(_target, msg.sender, jobAttributes[_target][0], _solution);
-			mint(msg.sender, jobAttributes[_target][0]);
+			mint(msg.sender, jobAttributes[_target][0] * 0.9);
 			jobAttributes[_target] = 0;
 		}
 		// cant submit solution to own job
