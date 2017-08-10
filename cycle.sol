@@ -208,9 +208,11 @@ contract Cyc is owned, token {
 	jobs[jobid] = fulljob;
 	jobOwners[msg.sender] = jobid;
 	jobAttributes[jobid] = [uint256(cost), size1, size2, block.timestamp];
+	balanceOf[msg.sender] -= cost;	
 	JobOpened(jobid, msg.sender, cost);
 	OpenJobs += 1;
 	return true;
+
     }
 
     function CloseJob(address _target, bytes _solution) returns (bool success) {
