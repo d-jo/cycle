@@ -14,7 +14,7 @@ contract owned {
     }
 
     modifier onlyManager {
-	if (msg.sender != ownder) throw;
+	if (msg.sender != owner) throw;
 	if (msg.sender != manager) throw;
 	_;
     }
@@ -66,11 +66,11 @@ contract token {
     }
 
     /* Allow another contract to spend some tokens in your behalf */
-    function approve(address _spender, uint256 _value)
-        returns (bool success) {
+    function approve(address _spender, uint256 _value) returns (bool success) {
             return true;
-        }
     }
+
+    
 
     /* A contract attempts to get the coins */
     function transferFrom(address _from, address _to, uint256 _value) returns (bool success) {
@@ -98,9 +98,9 @@ contract Cyc is owned, token {
 
     mapping (address => bool) public frozenAccount;
 
-    mapping (bytes32 => bytes) storage public jobs;
-    mapping (bytes32 => address) storage public jobOwners;
-    mapping (bytes32 => uint256[4]) storage public jobAttributes;
+    mapping (bytes32 => bytes) public jobs;
+    mapping (bytes32 => address) public jobOwners;
+    mapping (bytes32 => uint256[4]) public jobAttributes;
     
 
     /* This generates a public event on the blockchain that will notify clients */
@@ -149,17 +149,19 @@ contract Cyc is owned, token {
 	return numOfBytes * COST_PER_BYTE;
     }
 
-    function OpenJob(bytes4 memory _operation, bytes memory _mat1, _mat2) returns (bool success) {
+    function OpenJob(bytes4 _operation, bytes _mat1, bytes _mat2) returns (bool success) {
 	if (frozenAccount[msg.sender]) throw;
-	uint memory size = 196 + _mat1.length + _mat2.length;
-	uint memory cost = cost(size);
-	if (balanceOf[msg.sender] < cost) throw;
+	uint size = 196 + _mat1.length + _mat2.length;
+	uint totalCost = cost(size);
+	if (balanceOf[msg.sender] < totalCost) throw;
 	
-	bytes32 memory jobid = keccak256(msg.sender, jobs.length, VERSION, block.timestamp, _operation, _mat1, _mat2);
-	bytes memory fulljob = new bytes(size);
-	uint memory size1 = _mat1.length;
-	uint memory size2 = _mat2.length;
-	uint memory offset = 0;
+	bytes32 jobid = keccak256(msg.sender, OpenJobs, VERSION, block.timestamp, _operation, _mat1, _mat2);
+	bytes fulljob = new bytes(size);
+	uint size1 = _mat1.length;
+	uint size2 = _mat2.length;
+	uint offset = 0;
+	address sender = msg.sender;
+	uint timestamp = block.timestamp;
 	
 	assembly {
 		// --------------------------
@@ -170,7 +172,7 @@ contract Cyc is owned, token {
 		// --------------------------
 		// OPERATION    ------- BYTES
 		// STORE SENDER 	(32b)
-		mstore(add(fulljob, add(mload(offset), 32)), msg.sender)
+		mstore(add(fulljob, add(mload(offset), 32)), sender)
 		// MOVE OFFSET 		(32)
 		mstore(add(offset, 32), add(mload(offset), 32))
 		// STORE VERSION 	(32b)
@@ -178,7 +180,7 @@ contract Cyc is owned, token {
 		// MOVE OFFSET 		(32)
 		mstore(add(offset, 32), add(mload(offset), 32))
 		// STORE TIMESTAMP 	(32b)
-		mstore(add(fulljob, add(mload(offset), 32)), block.timestamp)
+		mstore(add(fulljob, add(mload(offset), 32)), timestamp)
 		// MOVE OFFSET 		(32)
 		mstore(add(offset, 32), add(mload(offset), 32))
 		// STORE OPERATION 	(4b)
@@ -224,6 +226,7 @@ contract Cyc is owned, token {
 			JobClosed(_target, msg.sender, jobAttributes[_target][0], _solution);
 			mint(msg.sender, jobAttributes[_target][0] * 0.9);
 			jobAttributes[_target] = 0;
+			OpenJobs -= 1;
 		}
 		// cant submit solution to own job
 		throw;
@@ -238,7 +241,7 @@ contract Cyc is owned, token {
 	if (balanceOf[_target] + _value < balanceOf[_target]) throw;
 	totalSupply += _value;
 	balanceOf[_target] += _value;
-	Mint(_target, _value)
+	Mint(_target, _value);
 	return true;
     }
 
