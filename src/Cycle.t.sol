@@ -4,7 +4,7 @@ import "ds-test/test.sol";
 
 import "./Cycle.sol";
 
-contract BackendTest is DSTest {
+contract CycleTest is DSTest {
     Backend backend;
 
     function setUp() {
