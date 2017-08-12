@@ -1,0 +1,6 @@
+name            backend
+description     A newly-created dapp
+version         0.0.0
+
+author          djo
+license         Apache-2.0
