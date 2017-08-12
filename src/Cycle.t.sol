@@ -2,7 +2,7 @@ pragma solidity ^0.4.13;
 
 import "ds-test/test.sol";
 
-import "./Backend.sol";
+import "./Cycle.sol";
 
 contract BackendTest is DSTest {
     Backend backend;
