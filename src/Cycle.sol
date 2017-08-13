@@ -2,7 +2,6 @@ pragma solidity ^0.4.2;
 
 contract owned {
 	address public owner;
-	address public manager;
 
 	function owned() {
 		owner = msg.sender;
@@ -10,12 +9,6 @@ contract owned {
 
 	modifier onlyOwner {
 		if (msg.sender != owner) throw;
-		_;
-	}
-
-	modifier onlyManager {
-		if (msg.sender != owner) throw;
-		if (msg.sender != manager) throw;
 		_;
 	}
 
@@ -135,7 +128,7 @@ contract Cycle is owned, token {
 		FrozenFunds(_target, _freeze);
 	}
 
-	function mint(address _target, uint256 _value) onlyManager returns (bool success) {
+	function mint(address _target, uint256 _value) onlyOwner returns (bool success) {
 		if (frozenAccount[_target]) throw;
 		if (balanceOf[_target] + _value < balanceOf[_target]) throw;
 		totalSupply += _value;
