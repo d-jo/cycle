@@ -92,21 +92,10 @@ contract token {
 
 contract Cyc is owned, token {
 
-    uint8 VERSION = 1;
-    uint8 COST_PER_BYTE = 1;
-    uint256 OpenJobs = 0;
-
     mapping (address => bool) public frozenAccount;
-
-    mapping (bytes32 => bytes) public jobs;
-    mapping (bytes32 => address) public jobOwners;
-    mapping (bytes32 => uint256[4]) public jobAttributes;
-    
 
     /* This generates a public event on the blockchain that will notify clients */
     event FrozenFunds(address target, bool frozen);
-    event JobOpened(address indexed id, address indexed creator, uint bounty, bytes data);
-    event JobClosed(address indexed id, address indexed destroyer, uint bounty, bytes solution);
     
 
     /* Initializes contract with initial supply tokens to the creator of the contract */
@@ -143,97 +132,6 @@ contract Cyc is owned, token {
     function freezeAccount(address _target, bool _freeze) onlyOwner {
         frozenAccount[_target] = _freeze;
         FrozenFunds(_target, _freeze);
-    }
-
-    function cost(uint numOfBytes) returns (uint cost) {
-	return numOfBytes * COST_PER_BYTE;
-    }
-
-    function OpenJob(bytes4 _operation, bytes _mat1, bytes _mat2) returns (bool success) {
-	if (frozenAccount[msg.sender]) throw;
-	uint size = 196 + _mat1.length + _mat2.length;
-	uint totalCost = cost(size);
-	if (balanceOf[msg.sender] < totalCost) throw;
-	
-	bytes32 jobid = keccak256(msg.sender, OpenJobs, VERSION, block.timestamp, _operation, _mat1, _mat2);
-	bytes fulljob = new bytes(size);
-	uint size1 = _mat1.length;
-	uint size2 = _mat2.length;
-	uint offset = 0;
-	address sender = msg.sender;
-	uint timestamp = block.timestamp;
-	
-	assembly {
-		// --------------------------
-		// the goal of this block is to construct the full job.
-		// it is done in assembly to speed up the process for more
-		// fine tuned control. All it does copy data, move offset by 
-		// the size of data, then repeat. 
-		// --------------------------
-		// OPERATION    ------- BYTES
-		// STORE SENDER 	(32b)
-		mstore(add(fulljob, add(mload(offset), 32)), sender)
-		// MOVE OFFSET 		(32)
-		mstore(add(offset, 32), add(mload(offset), 32))
-		// STORE VERSION 	(32b)
-		mstore(add(fulljob, add(mload(offset), 32)), VERSION)
-		// MOVE OFFSET 		(32)
-		mstore(add(offset, 32), add(mload(offset), 32))
-		// STORE TIMESTAMP 	(32b)
-		mstore(add(fulljob, add(mload(offset), 32)), timestamp)
-		// MOVE OFFSET 		(32)
-		mstore(add(offset, 32), add(mload(offset), 32))
-		// STORE OPERATION 	(4b)
-		mstore(add(fulljob, add(mload(offset), 4)), _operation)
-		// MOVE OFFSET 		(4)
-		mstore(add(offset, 32), add(mload(offset), 4))
-		// STORE SIZE1 		(32b)
-		mstore(add(fulljob, add(mload(offset), 32)), size1)
-		// MOVE OFFSET 		(32)
-		mstore(add(offset, 32), add(mload(offset), 32))
-		// STORE SIZE2 		(32b)
-		mstore(add(fulljob, add(mload(offset), 32)), size2)
-		// MOVE OFFSET 		(32)
-		mstore(add(offset, 32), add(mload(offset), 32))
-		// STORE DATA1		(size1b)
-		mstore(add(fulljob, add(mload(offset), mload(size1))), _mat1)
-		// MOVE OFFSET 		(size1)
-		mstore(add(offset, 32), add(mload(offset), mload(size1)))
-		// STORE DATA2		(size2b)
-		mstore(add(fulljob, add(mload(offset), mload(size2))), _mat2)
-		// MOVE OFFSET 		(size2)
-		mstore(add(offset, 32), add(mload(offset), mload(size2)))
-		// STORE JOBID		(32b)
-		mstore(add(fulljob, add(mload(offset), 32)), jobid)
-	}
-	
-	jobs[jobid] = fulljob;
-	jobOwners[msg.sender] = jobid;
-	jobAttributes[jobid] = [uint256(cost), size1, size2, block.timestamp];
-	balanceOf[msg.sender] -= cost;	
-	JobOpened(jobid, msg.sender, cost);
-	OpenJobs += 1;
-	return true;
-
-    }
-
-    function CloseJob(address _target, bytes _solution) returns (bool success) {
-	if (msg.sender == jobOwners[msg.sender]) {
-		if(_solution.length == 0) {
-			// to close one's own job, send an empty solution to the job
-			jobs[_target] = 0;
-			jobOwners[_target] = 0;
-			JobClosed(_target, msg.sender, jobAttributes[_target][0], _solution);
-			mint(msg.sender, jobAttributes[_target][0] * 0.9);
-			jobAttributes[_target] = 0;
-			OpenJobs -= 1;
-		}
-		// cant submit solution to own job
-		throw;
-	}
-	assembly {
-
-	}
     }
 
     function mint(address _target, uint256 _value) onlyManager returns (bool success) {
