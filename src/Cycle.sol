@@ -87,7 +87,6 @@ contract Cycle is owned, token {
 
 	mapping (address => bool) public frozenAccount;
 
-
 	/* This generates a public event on the blockchain that will notify clients */
 	event FrozenFunds(address target, bool frozen);
 
@@ -99,6 +98,13 @@ contract Cycle is owned, token {
 		uint8 decimalUnits,
 		string tokenSymbol
 	) token (initialSupply, tokenName, decimalUnits, tokenSymbol) {}
+
+	struct JobManager {
+		bytes32[] queueData;
+		uint queueFront;
+	       	uint queueBack;
+		bytes32[] activePool;
+	}
 
 	/* Send coins */
 	function transfer(address _to, uint256 _value) {
