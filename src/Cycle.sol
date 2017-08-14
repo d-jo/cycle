@@ -87,6 +87,8 @@ contract Cycle is owned, token {
 
 	mapping (address => bool) public frozenAccount;
 
+	uint OpenJobs = 0;
+
 	/* This generates a public event on the blockchain that will notify clients */
 	event FrozenFunds(address target, bool frozen);
 
@@ -100,10 +102,33 @@ contract Cycle is owned, token {
 	) token (initialSupply, tokenName, decimalUnits, tokenSymbol) {}
 
 	struct JobManager {
-		bytes32[] queueData;
-		uint queueFront;
-	       	uint queueBack;
+		bytes32[] data;
+		uint front;
+		uint back;
 		bytes32[] activePool;
+	}
+
+	function SubmitJob() returns (bool success) {
+		return true;
+	}
+
+	function CloseJob() {
+
+	}
+
+	function push(JobManager storage q, bytes32 data) internal {
+		if ((q.back + 1) % q.data.length == q.front)
+			return; // throw;
+		q.data[q.back] = data;
+		q.back = (q.back + 1) % q.data.length;
+	}
+
+	function pop(JobManager storage q) internal returns (bytes32 r) {
+		if (q.back == q.front)
+			return; // throw;
+		r = q.data[q.front];
+		delete q.data[q.front];
+		q.front = (q.front + 1) % q.data.length;
 	}
 
 	/* Send coins */
