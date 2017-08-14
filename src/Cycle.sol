@@ -63,8 +63,6 @@ contract token {
 		return true;
 	}
 
-
-
 	/* A contract attempts to get the coins */
 	function transferFrom(address _from, address _to, uint256 _value) returns (bool success) {
 		if (balanceOf[_from] < _value) throw;                 // Check if the sender has enough
@@ -86,6 +84,7 @@ contract token {
 contract Cycle is owned, token {
 
 	mapping (address => bool) public frozenAccount;
+	mapping (bytes32 => Job) internal jobs;
 
 	uint OpenJobs = 0;
 
@@ -106,6 +105,12 @@ contract Cycle is owned, token {
 		uint front;
 		uint back;
 		bytes32[] activePool;
+	}
+
+	struct Job {
+		bytes32 id;
+		address owner;
+		
 	}
 
 	function SubmitJob() returns (bool success) {
