@@ -107,7 +107,13 @@ contract Cycle is owned, token {
 		bytes32[] data;
 		uint front;
 		uint back;
-		mapping (bytes32 => uint) activePool;
+		mapping (bytes32 => mapping(address => Solution)) activePool;
+	}
+
+	struct Solution {
+		bytes32 hash;
+		string data;
+		bool exists;
 	}
 
 	struct Job {
@@ -145,6 +151,12 @@ contract Cycle is owned, token {
 	function SolveJob(bytes32 id, string solution, bytes32 pow) external returns (bool success){
 		bytes32 hash = keccak256(id, msg.sender, solution);
 		if(hash != pow) throw; // proof of work was not correct
+		Solution s;
+		s.hash = hash;
+		s.data = solution;
+		s.exists = true;
+		if(m.activePool[id][msg.sender].exists) return false; // cant overwrite a solution
+		m.activePool[id][msg.sender] = s;
 
 	}
 
