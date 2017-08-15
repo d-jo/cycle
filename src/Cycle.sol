@@ -117,23 +117,26 @@ contract Cycle is owned, token {
 		uint time;
 		string data1;
 		string data2;
+		string op;
 		
 	}
 
-	function SubmitJob(string data1, string data2) returns (bool success) {
+	function CreateJob(string data1, string data2, string op) returns (bool success) {
 		Job j;	
-		j.id = keccak256(msg.sender, block.timestamp, data1, data2);
+		j.id = keccak256(data1, data2, op);
 		j.owner = msg.sender;
 		j.time = block.timestamp;
 		j.data1 = data1;
 		j.data2 = data2;
+		j.op = op;
 		jobs[j.id] = j;
 		push(m, j.id);
 		return true;
 	}
 
-	function CloseJob() {
-
+	function SolveJob(bytes32 id, string solution, bytes32 pow) {
+		bytes32 hash = keccak256(id, msg.sender, solution);
+		if(hash != pow) throw; // proof of work was not correct
 	}
 
 	function push(JobManager storage q, bytes32 data) internal {
