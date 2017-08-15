@@ -85,6 +85,7 @@ contract Cycle is owned, token {
 
 	mapping (address => bool) public frozenAccount;
 	mapping (bytes32 => Job) internal jobs;
+	JobManager m;
 
 	uint OpenJobs = 0;
 
@@ -98,7 +99,10 @@ contract Cycle is owned, token {
 		string tokenName,
 		uint8 decimalUnits,
 		string tokenSymbol
-	) token (initialSupply, tokenName, decimalUnits, tokenSymbol) {}
+	) token (initialSupply, tokenName, decimalUnits, tokenSymbol) {
+		m.data.length = 10000;
+		m.activePool.length = 100;
+	}
 
 	struct JobManager {
 		bytes32[] data;
@@ -110,10 +114,21 @@ contract Cycle is owned, token {
 	struct Job {
 		bytes32 id;
 		address owner;
+		uint time;
+		string data1;
+		string data2;
 		
 	}
 
-	function SubmitJob() returns (bool success) {
+	function SubmitJob(string data1, string data2) returns (bool success) {
+		Job j;	
+		j.id = keccak256(msg.sender, block.timestamp, data1, data2);
+		j.owner = msg.sender;
+		j.time = block.timestamp;
+		j.data1 = data1;
+		j.data2 = data2;
+		jobs[j.id] = j;
+		push(m, j.id);
 		return true;
 	}
 
