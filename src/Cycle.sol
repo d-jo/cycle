@@ -85,6 +85,7 @@ contract Cycle is owned, token {
 
 	mapping (address => bool) public frozenAccount;
 	mapping (bytes32 => Job) internal jobs;
+	mapping (bytes32 => uint) internal solutions;
 	JobManager m;
 
 	uint OpenJobs = 0;
@@ -109,7 +110,7 @@ contract Cycle is owned, token {
 		uint back;
 		mapping (bytes32 => mapping(address => Solution)) activePool;
 	}
-
+	
 	struct Solution {
 		bytes32 hash;
 		string data;
@@ -157,7 +158,12 @@ contract Cycle is owned, token {
 		s.exists = true;
 		if(m.activePool[id][msg.sender].exists) return false; // cant overwrite a solution
 		m.activePool[id][msg.sender] = s;
+		uint sols = solutions[id];
+		solutions[id] = uint(sols + 1);
+		if(sols + 1 > 32) {
+			// job is complete after 32 solutions
 
+		}
 	}
 
 	function push(JobManager storage q, bytes32 data) internal {
