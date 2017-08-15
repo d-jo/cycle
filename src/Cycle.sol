@@ -85,7 +85,7 @@ contract Cycle is owned, token {
 
 	mapping (address => bool) public frozenAccount;
 	mapping (bytes32 => Job) internal jobs;
-	mapping (bytes32 => uint) internal solutions;
+	mapping (bytes32 => SolutionManager) internal solutions;
 	JobManager m;
 
 	uint OpenJobs = 0;
@@ -108,11 +108,18 @@ contract Cycle is owned, token {
 		bytes32[] data;
 		uint front;
 		uint back;
-		mapping (bytes32 => mapping(address => Solution)) activePool;
+		bytes32[] activeJobs;
 	}
 	
+	struct SolutionManager {
+		Solution[] allSolutions;
+		uint solves;
+		uint max;
+	}
+
 	struct Solution {
 		bytes32 hash;
+		address submitter;
 		string data;
 		bool exists;
 	}
@@ -146,23 +153,27 @@ contract Cycle is owned, token {
 		balanceOf[msg.sender] -= j.cost;
 		jobs[j.id] = j;
 		push(m, j.id);
+		SolutionManager sm;
+		sm.allSolutions.length = 32;
+		sm.solves = 0;
+		sm.max = 32;
+		solutions[j.id] = sm;
 		return true;
 	}
 
 	function SolveJob(bytes32 id, string solution, bytes32 pow) external returns (bool success){
 		bytes32 hash = keccak256(id, msg.sender, solution);
 		if(hash != pow) throw; // proof of work was not correct
+		SolutionManager sm = solutions[id];
 		Solution s;
 		s.hash = hash;
+		s.submitter = msg.sender;
 		s.data = solution;
 		s.exists = true;
-		if(m.activePool[id][msg.sender].exists) return false; // cant overwrite a solution
-		m.activePool[id][msg.sender] = s;
-		uint sols = solutions[id];
-		solutions[id] = uint(sols + 1);
-		if(sols + 1 > 32) {
-			// job is complete after 32 solutions
-
+		sm.allSolutions.push(s);
+		
+		if(sm.solves == sm.max) {
+			//job is done
 		}
 	}
 
