@@ -101,42 +101,51 @@ contract Cycle is owned, token {
 		string tokenSymbol
 	) token (initialSupply, tokenName, decimalUnits, tokenSymbol) {
 		m.data.length = 10000;
-		m.activePool.length = 100;
 	}
 
 	struct JobManager {
 		bytes32[] data;
 		uint front;
 		uint back;
-		bytes32[] activePool;
+		mapping (bytes32 => uint) activePool;
 	}
 
 	struct Job {
 		bytes32 id;
 		address owner;
+		uint cost;
 		uint time;
 		string data1;
 		string data2;
 		string op;
 		
 	}
+	
+	function cost(uint size) internal returns (uint) {
+		return size * 2;
+	}
 
-	function CreateJob(string data1, string data2, string op) returns (bool success) {
-		Job j;	
+	function CreateJob(string data1, string data2, string op) external returns (bool success) {
+		Job j;
+		j.cost = cost(bytes(data1).length + bytes(data2).length);
+		if(balanceOf[msg.sender] < j.cost) return false;
+		if(balanceOf[msg.sender] - j.cost > balanceOf[msg.sender]) return false;
 		j.id = keccak256(data1, data2, op);
 		j.owner = msg.sender;
 		j.time = block.timestamp;
 		j.data1 = data1;
 		j.data2 = data2;
 		j.op = op;
+		balanceOf[msg.sender] -= j.cost;
 		jobs[j.id] = j;
 		push(m, j.id);
 		return true;
 	}
 
-	function SolveJob(bytes32 id, string solution, bytes32 pow) {
+	function SolveJob(bytes32 id, string solution, bytes32 pow) external returns (bool success){
 		bytes32 hash = keccak256(id, msg.sender, solution);
 		if(hash != pow) throw; // proof of work was not correct
+
 	}
 
 	function push(JobManager storage q, bytes32 data) internal {
