@@ -144,6 +144,14 @@ contract Cycle is owned, token {
 		return size * 2;
 	}
 
+
+	/*
+		Returns work for the miner to do
+	*/
+	function GetWork() {
+		// here is where we update the state of the JobManager to move jobs from the queue to the active pool. jobs should be grabbed from the active pool at random, jobs can only be cashed once per instance.
+	}	
+
 	/*
 		Create a job using the data provided. Data should be in numpy matrix form. 
 	        Op values: conv
