@@ -92,6 +92,7 @@ contract Cycle is owned, token {
 
 	/* This generates a public event on the blockchain that will notify clients */
 	event FrozenFunds(address target, bool frozen);
+	event JobCreated(bytes32 id, address creator);
 
 
 	/* Initializes contract with initial supply tokens to the creator of the contract */
@@ -167,6 +168,7 @@ contract Cycle is owned, token {
 		sm.solves = 0;
 		sm.max = 32;
 		solutions[j.id] = sm;
+		JobCreated(j.id, msg.sender);
 		return true;
 	}
 	
