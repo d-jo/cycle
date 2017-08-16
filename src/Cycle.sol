@@ -136,15 +136,23 @@ contract Cycle is owned, token {
 		
 	}
 	
+	/*
+		Calculate the cost of a job //TODO
+	*/	
 	function cost(uint size) internal returns (uint) {
 		return size * 2;
 	}
 
+	/*
+		Create a job using the data provided. Data should be in numpy matrix form. 
+	        Op values: conv
+	*/
 	function CreateJob(string data1, string data2, string op) external returns (bool success) {
 		Job j;
 		j.cost = cost(bytes(data1).length + bytes(data2).length);
 		if(balanceOf[msg.sender] < j.cost) return false;
 		if(balanceOf[msg.sender] - j.cost > balanceOf[msg.sender]) return false;
+		/* when we create the job id, we only use the data and operation. by doing this, identical problems will have identical ids */
 		j.id = keccak256(data1, data2, op);
 		j.owner = msg.sender;
 		j.time = block.timestamp;
@@ -161,10 +169,21 @@ contract Cycle is owned, token {
 		solutions[j.id] = sm;
 		return true;
 	}
-
+	
+	/*
+		Submit a solution to a job. 
+	       	
+		id - target job id
+	       	solution - numpy string representing resulting matrix
+	       	pow - a hash proving the submitter did work on thr problem.
+	*/
 	function SolveJob(bytes32 id, string solution, bytes32 pow) external returns (bool success){
-		if(!solutions[id].active) return false;
-		bytes32 hash = keccak256(id, msg.sender, solution);
+		if(!solutions[id].active) return false; // the solution manager is not accepting solutions
+		
+		/* all we care is that that the address that submitted the solution did work. if the same work is submitted multiple time and this miner has seen it before, who cares that they did the work in the way past. 
+		*/
+		bytes32 hash = keccak256(id, msg.sender, solution); // calculate job hash
+
 		if(hash != pow) throw; // proof of work was not correct
 		SolutionManager sm = solutions[id];
 		Solution s;
