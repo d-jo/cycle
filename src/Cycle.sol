@@ -115,6 +115,7 @@ contract Cycle is owned, token {
 		Solution[] allSolutions;
 		uint solves;
 		uint max;
+		bool active;
 	}
 
 	struct Solution {
@@ -162,6 +163,7 @@ contract Cycle is owned, token {
 	}
 
 	function SolveJob(bytes32 id, string solution, bytes32 pow) external returns (bool success){
+		if(!solutions[id].active) return false;
 		bytes32 hash = keccak256(id, msg.sender, solution);
 		if(hash != pow) throw; // proof of work was not correct
 		SolutionManager sm = solutions[id];
