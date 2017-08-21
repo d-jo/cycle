@@ -157,7 +157,7 @@ contract Cycle is owned, token {
 	        Op values: conv
 	*/
 	function CreateJob(string data1, string data2, string op) external returns (bool success) {
-		Job j;
+		Job memory j;
 		j.cost = cost(bytes(data1).length + bytes(data2).length);
 		if(balanceOf[msg.sender] < j.cost) return false;
 		if(balanceOf[msg.sender] - j.cost > balanceOf[msg.sender]) return false;
@@ -171,7 +171,7 @@ contract Cycle is owned, token {
 		balanceOf[msg.sender] -= j.cost;
 		jobs[j.id] = j;
 		push(m, j.id);
-		SolutionManager sm;
+		SolutionManager memory sm;
 		sm.allSolutions.length = 32;
 		sm.solves = 0;
 		sm.max = 32;
@@ -195,8 +195,8 @@ contract Cycle is owned, token {
 		bytes32 hash = keccak256(id, msg.sender, solution); // calculate job hash
 
 		require(hash == pow); // proof of work was not correct
-		SolutionManager sm = solutions[id];
-		Solution s;
+		SolutionManager memory sm = solutions[id];
+		Solution memory s;
 		s.hash = hash;
 		s.submitter = msg.sender;
 		s.data = solution;
