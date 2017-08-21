@@ -58,10 +58,6 @@ contract token {
 		Transfer(msg.sender, _to, _value);                   // Notify anyone listening that this transfer took place
 	}
 
-	/* Allow another contract to spend some tokens in your behalf */
-	function approve(address _spender, uint256 _value) returns (bool success) {
-		return true;
-	}
 
 	/* A contract attempts to get the coins */
 	function transferFrom(address _from, address _to, uint256 _value) returns (bool success) {
@@ -172,7 +168,6 @@ contract Cycle is owned, token {
 		jobs[j.id] = j;
 		push(m, j.id);
 		SolutionManager memory sm;
-		sm.allSolutions.length = 32;
 		sm.solves = 0;
 		sm.max = 32;
 		solutions[j.id] = sm;
@@ -195,7 +190,7 @@ contract Cycle is owned, token {
 		bytes32 hash = keccak256(id, msg.sender, solution); // calculate job hash
 
 		require(hash == pow); // proof of work was not correct
-		SolutionManager memory sm = solutions[id];
+		SolutionManager storage sm = solutions[id];
 		Solution memory s;
 		s.hash = hash;
 		s.submitter = msg.sender;
