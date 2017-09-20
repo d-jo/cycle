@@ -122,15 +122,6 @@ contract Cycle is owned, token {
 		FrozenFunds(_target, _freeze);
 	}
 
-	function mint(address _target, uint256 _value) onlyOwner returns (bool success) {
-		require(!frozenAccount[_target]);
-		require(balanceOf[_target] + _value > balanceOf[_target]);
-		totalSupply += _value;
-		balanceOf[_target] += _value;
-		Mint(_target, _value);
-		return true;
-	}
-
 
 
 }
