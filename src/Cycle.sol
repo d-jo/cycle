@@ -91,7 +91,7 @@ contract Cycle is owned, token {
 		uint8 decimalUnits,
 		string tokenSymbol
 	) token (initialSupply, tokenName, decimalUnits, tokenSymbol) {
-		m.data.length = 10000;
+
 	}
 
 	/* Send coins */
