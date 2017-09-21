@@ -17,84 +17,70 @@ contract owned {
 	}
 }
 
+contract ERC20Interface {
+	function totalSupply() constant returns (uint256 totalSupply);
+	function balanceOf(address _owner) constant returns (uint256 balance);
+	function transfer(address _to, uint256 _value) returns (bool success);
+	function transferFrom(address _from, address _to, uint256 _amount) returns (bool success);
+	function approve(address _spender, uint256 _value) returns (bool success);
+	function allowance(address _owner, address _spender) constant returns (uint remaining);
+	event Transfer(address indexed _from, address indexed _to, uint _value);
+	event Approval(address indexed _owner, address indexed _spender, uint _value);
+}
 
-contract token {
-	/* Public variables of the token */
+contract AIToken is owned, ERC20Interface {
+	// ================================================
+	// CONSTANTS
+	// ================================================
 	string public standard = 'ERC20';
 	string public constant name = 'codename cycle';
 	string public constant symbol = 'ccy';
 	uint8 public constant decimals = 18;
-	uint256 public constant totalSupply = 0xffffffff;
+	uint256 _totalSupply = 0xffffffff;
 
-	/* This creates an array with all balances */
-	mapping (address => uint256) public balanceOf;
-	mapping (address => mapping (address => uint256)) public allowance;
+	
+	// ================================================
+	// ERC20 Variables
+	// ================================================
+	mapping (address => uint256) public balances;
+	mapping (address => mapping (address => uint256)) public allowed;
 
-	/* This generates a public event on the blockchain that will notify clients */
-	event Transfer(address indexed from, address indexed to, uint256 value);
-
-	/* Initializes contract with initial supply tokens to the creator of the contract */
-	function token(uint256 initialSupply) {
-		balanceOf[msg.sender] = initialSupply;	// Give the creator all initial tokens
+	function AIToken() {
+		balances[msg.sender] = _totalSupply;
 	}
 
-	/* Send coins */
-	function transfer(address _to, uint256 _value) {
-		require(balanceOf[msg.sender] > _value);           
-		require(balanceOf[_to] + _value > balanceOf[_to]); 
-		balanceOf[msg.sender] -= _value;
-		balanceOf[_to] += _value;
-		Transfer(msg.sender, _to, _value);
+	function balanceOf(address _owner) constant returns (uint256 balance) {
+		return balances[_owner];
+	}
+
+	function transfer(address _to, uint256 _value) returns (bool success) {
+		if((balances[msg.sender] > _value) && (balances[_to] + _value > balances[_to])) {
+			balances[msg.sender] -= _value;
+			balances[_to] += _value;
+			Transfer(msg.sender, _to, _value);
+			return true;
+		}
+
+		return false;
 	}
 
 
 	/* A contract attempts to get the coins */
-	function transferFrom(address _from, address _to, uint256 _value) returns (bool success) {
-		require(balanceOf[_from] > _value);                 // Check if the sender has enough
-		require(balanceOf[_to] + _value > balanceOf[_to]);  // Check for overflows
-		require(_value <= allowance[_from][msg.sender]);   // Check allowance
-		balanceOf[_from] -= _value;                          // Subtract from the sender
-		balanceOf[_to] += _value;                            // Add the same to the recipient
-		allowance[_from][msg.sender] -= _value;
-		Transfer(_from, _to, _value);
-		return true;
+	function transferFrom(address _from, address _to, uint256 _amount) returns (bool success) {
+		if((balances[_from] > _amount) 
+			&& (balances[_to] + _amount > balances[_to]) 
+	   		&& (_amount<= allowed[_from][msg.sender])) {
+			balances[_from] -= _amount;                          // Subtract from the sender
+			balances[_to] += _amount;                            // Add the same to the recipient
+			allowed[_from][msg.sender] -= _amount;
+			Transfer(_from, _to, _amount);
+			return true;
+		}
+		return false;
 	}
 
 	/* This unnamed function is called whenever someone tries to send ether to it */
 	function () {
 		revert();     // Prevents accidental sending of ether
 	}
-}
-
-contract Cycle is owned, token {
-
-	/* Initializes contract with initial supply tokens to the creator of the contract */
-	function Cycle(uint256 initialSupply) token (initialSupply) {
-
-	}
-
-	/* Send coins */
-	function transfer(address _to, uint256 _value) {
-		require(balanceOf[msg.sender] > _value);           // Check if the sender has enough
-		require(balanceOf[_to] + _value > balanceOf[_to]); // Check for overflows
-		balanceOf[msg.sender] -= _value;                     // Subtract from the sender
-		balanceOf[_to] += _value;                            // Add the same to the recipient
-		Transfer(msg.sender, _to, _value);                   // Notify anyone listening that this transfer took place
-	}
-
-	/* A contract attempts to get the coins */
-	function transferFrom(address _from, address _to, uint256 _value) returns (bool success) {
-		require(balanceOf[_from] > _value);                 // Check if the sender has enough
-		require(balanceOf[_to] + _value > balanceOf[_to]);  // Check for overflows
-		require(_value < allowance[_from][msg.sender]);   // Check allowance
-		balanceOf[_from] -= _value;                          // Subtract from the sender
-		balanceOf[_to] += _value;                            // Add the same to the recipient
-		allowance[_from][msg.sender] -= _value;
-		Transfer(_from, _to, _value);
-		return true;
-	}
-
-
-
-
 }
