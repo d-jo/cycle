@@ -17,11 +17,10 @@ contract owned {
 	}
 }
 
-contract tokenRecipient { function receiveApproval(address _from, uint256 _value, address _token, bytes _extraData); }
 
 contract token {
 	/* Public variables of the token */
-	string public standard = 'cyc 0.1';
+	string public standard = 'ERC20';
 	string public name;
 	string public symbol;
 	uint8 public decimals;
@@ -78,9 +77,7 @@ contract token {
 
 contract Cycle is owned, token {
 
-	mapping (address => bool) public frozenAccount;
 
-	event FrozenFunds(address target, bool frozen);
 
 
 	/* Initializes contract with initial supply tokens to the creator of the contract */
@@ -97,7 +94,6 @@ contract Cycle is owned, token {
 	function transfer(address _to, uint256 _value) {
 		require(balanceOf[msg.sender] > _value);           // Check if the sender has enough
 		require(balanceOf[_to] + _value > balanceOf[_to]); // Check for overflows
-		require(!frozenAccount[msg.sender]);                // Check if frozen
 		balanceOf[msg.sender] -= _value;                     // Subtract from the sender
 		balanceOf[_to] += _value;                            // Add the same to the recipient
 		Transfer(msg.sender, _to, _value);                   // Notify anyone listening that this transfer took place
@@ -105,7 +101,6 @@ contract Cycle is owned, token {
 
 	/* A contract attempts to get the coins */
 	function transferFrom(address _from, address _to, uint256 _value) returns (bool success) {
-		require(!frozenAccount[_from]);                        // Check if frozen            
 		require(balanceOf[_from] > _value);                 // Check if the sender has enough
 		require(balanceOf[_to] + _value > balanceOf[_to]);  // Check for overflows
 		require(_value < allowance[_from][msg.sender]);   // Check allowance
@@ -116,10 +111,6 @@ contract Cycle is owned, token {
 		return true;
 	}
 
-	function freezeAccount(address _target, bool _freeze) onlyOwner {
-		frozenAccount[_target] = _freeze;
-		FrozenFunds(_target, _freeze);
-	}
 
 
 
