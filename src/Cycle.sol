@@ -17,6 +17,9 @@ contract owned {
 	}
 }
 
+/*
+
+*/
 contract ERC20Interface {
 	function totalSupply() constant returns (uint256 totalSupply);
 	function balanceOf(address _owner) constant returns (uint256 balance);
@@ -66,9 +69,11 @@ contract AIToken is owned, ERC20Interface {
 
 
 	function transferFrom(address _from, address _to, uint256 _amount) returns (bool success) {
-		if((balances[_from] > _amount) 
-			&& (balances[_to] + _amount > balances[_to]) 
-	   		&& (_amount<= allowed[_from][msg.sender])) {
+		if(
+			(balances[_from] > _amount) && 
+			(balances[_to] + _amount > balances[_to]) && 
+			(_amount<= allowed[_from][msg.sender])
+		) {
 			balances[_from] -= _amount;                          // Subtract from the sender
 			balances[_to] += _amount;                            // Add the same to the recipient
 			allowed[_from][msg.sender] -= _amount;
