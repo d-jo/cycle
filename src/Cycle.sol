@@ -65,7 +65,6 @@ contract AIToken is owned, ERC20Interface {
 	}
 
 
-	/* A contract attempts to get the coins */
 	function transferFrom(address _from, address _to, uint256 _amount) returns (bool success) {
 		if((balances[_from] > _amount) 
 			&& (balances[_to] + _amount > balances[_to]) 
@@ -79,7 +78,16 @@ contract AIToken is owned, ERC20Interface {
 		return false;
 	}
 
-	/* This unnamed function is called whenever someone tries to send ether to it */
+	function approve(address _spender, uint256 _amount) returns (bool success) {
+		allowed[msg.sender][_spender] = _amount;
+		Approval(msg.sender, _spender, _amount);
+		return true;
+	}
+
+	function allowance(address _owner, address _spender) constant returns (uint256 remaining) {
+		return allowed[_owner][_spender];
+	}
+
 	function () {
 		revert();     // Prevents accidental sending of ether
 	}
