@@ -61,8 +61,9 @@ contract AIToken is owned, ERC20Interface {
 		balances[msg.sender] = _totalSupply;
 	}
 
+	// implementation of ERC20 totalSupply function
 	function totalSupply() constant returns (uint256 totalSupply) {
-		totalSupply = _totalSupply;
+		totalSupply = _totalSupply; 
 	}
 	
 	// implementation of ERC20 balance function
@@ -72,9 +73,18 @@ contract AIToken is owned, ERC20Interface {
 
 	// implementation of ERC20 transfer function
 	function transfer(address _to, uint256 _value) returns (bool success) {
-		if((balances[msg.sender] > _value) && (balances[_to] + _value > balances[_to])) {
+		/** conditions, in order:
+			1. spender has enough tokens
+			2. check for overflow attack
+		*/
+		if(
+			(balances[msg.sender] > _value) && 
+			(balances[_to] + _value > balances[_to])
+		) {
+			// conditions are good, transfer the tokens
 			balances[msg.sender] -= _value;
 			balances[_to] += _value;
+			// alert everyone the transfer took place
 			Transfer(msg.sender, _to, _value);
 			return true;
 		}
@@ -85,14 +95,22 @@ contract AIToken is owned, ERC20Interface {
 
 	// implementation of ERC20 transferFrom function
 	function transferFrom(address _from, address _to, uint256 _amount) returns (bool success) {
+		/** conditions, in order:
+		  	1. spender has enough tokens
+			2. check for overflow attacks
+			3. check that the message sender has the allowance
+		*/
 		if(
 			(balances[_from] > _amount) && 
 			(balances[_to] + _amount > balances[_to]) && 
-			(_amount<= allowed[_from][msg.sender])
+			(_amount <= allowed[_from][msg.sender])
 		) {
-			balances[_from] -= _amount;                          // Subtract from the sender
-			balances[_to] += _amount;                            // Add the same to the recipient
-			allowed[_from][msg.sender] -= _amount;
+			// conditions are good, transfer the token
+			balances[_from] -= _amount;
+			balances[_to] += _amount;
+			// subtract the amount sent from senders allowance
+			allowed[_from][msg.sender] -= _amount; 
+			// alert everyone the transfer took place
 			Transfer(_from, _to, _amount);
 			return true;
 		}
