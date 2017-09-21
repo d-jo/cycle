@@ -21,9 +21,9 @@ contract owned {
 contract token {
 	/* Public variables of the token */
 	string public standard = 'ERC20';
-	string public name;
-	string public symbol;
-	uint8 public decimals;
+	string public constant name = 'codename cycle';
+	string public constant symbol = 'ccy';
+	uint8 public constant decimals = 18;
 	uint256 public totalSupply;
 
 	/* This creates an array with all balances */
@@ -34,17 +34,9 @@ contract token {
 	event Transfer(address indexed from, address indexed to, uint256 value);
 
 	/* Initializes contract with initial supply tokens to the creator of the contract */
-	function token(
-		uint256 initialSupply,
-		string tokenName,
-		uint8 decimalUnits,
-		string tokenSymbol
-	) {
-		balanceOf[msg.sender] = initialSupply;              // Give the creator all initial tokens
-		totalSupply = initialSupply;                        // Update total supply
-		name = tokenName;                                   // Set the name for display purposes
-		symbol = tokenSymbol;                               // Set the symbol for display purposes
-		decimals = decimalUnits;                            // Amount of decimals for display purposes
+	function token(uint256 initialSupply) {
+		balanceOf[msg.sender] = initialSupply;	// Give the creator all initial tokens
+		totalSupply = initialSupply;		// Update total supply
 	}
 
 	/* Send coins */
@@ -77,16 +69,8 @@ contract token {
 
 contract Cycle is owned, token {
 
-
-
-
 	/* Initializes contract with initial supply tokens to the creator of the contract */
-	function Cycle(
-		uint256 initialSupply,
-		string tokenName,
-		uint8 decimalUnits,
-		string tokenSymbol
-	) token (initialSupply, tokenName, decimalUnits, tokenSymbol) {
+	function Cycle(uint256 initialSupply) token (initialSupply) {
 
 	}
 
