@@ -29,7 +29,7 @@ contract TokenActor {
 
 }
 
-contract TestContract is DSTest {
+contract TestToken is DSTest {
 	
 	AIToken token;
 	TokenActor actor;
