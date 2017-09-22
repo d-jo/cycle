@@ -11,8 +11,16 @@ contract TokenActor {
 		token = token_;
 	}
 
+	function doApprove(address spender, uint256 amount) returns (bool) {
+		return token.approve(spender, amount);
+	}
+
 	function doTransfer(address to, uint256 amount) returns (bool) {
 		return token.transfer(to, amount);
+	}
+
+	function doTransferFrom(address from, address to, uint256 amount) returns (bool) {
+		return token.transferFrom(from, to, amount);
 	}
 
 	function doBalance(address owner) returns (uint) {
@@ -33,6 +41,7 @@ contract TestContract is DSTest {
 		actor = new TokenActor(token);
 		actor2 = new TokenActor(token);
 		token.transfer(actor2, 1337);
+		actor2.doApprove(actor, 337);
 	}
 	
 	function testTotalSupply() {
@@ -57,8 +66,13 @@ contract TestContract is DSTest {
 		assert(actor.doTransfer(actor2, 0));
 	}
 
+	function testTransferFrom() {
+		assert(actor.doTransferFrom(actor2, this, 37));	
+	}
 	
-	
+	function testFailTransferFrom() {
+		assert(actor.doTransferFrom(actor2, this, 37777));	
+	}
 	
 
 }
