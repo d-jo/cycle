@@ -29,7 +29,6 @@ contract TokenActor {
 
 }
 
-
 contract TestContract is DSTest {
 	
 	AIToken token;
