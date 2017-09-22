@@ -20,6 +20,10 @@ contract owned {
 
 contract utility {
 	
-
+	modifier between(uint256 beginning, uint256 end) {
+		if(beginning < now && now < end) {
+			_;
+		}
+	}
 
 }
