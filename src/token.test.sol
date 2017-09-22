@@ -41,7 +41,6 @@ contract TestContract is DSTest {
 		actor = new TokenActor(token);
 		actor2 = new TokenActor(token);
 		token.transfer(actor2, 1337);
-		actor2.doApprove(actor, 337);
 	}
 	
 	function testTotalSupply() {
@@ -54,6 +53,7 @@ contract TestContract is DSTest {
 	}
 
 	function testTransfer() {
+		expectEventsExact(token);
 		uint256 prebalance = actor.doBalance(this);
 		assert(token.transfer(actor, 100));
 		assertEq(actor.doBalance(this), prebalance - 100);
@@ -66,13 +66,22 @@ contract TestContract is DSTest {
 		assert(actor.doTransfer(actor2, 0));
 	}
 
+	function testApprove() {
+		expectEventsExact(token);
+		assert(actor2.doApprove(actor, 337));
+	}
+
 	function testTransferFrom() {
+		actor2.doApprove(actor, 337);
 		assert(actor.doTransferFrom(actor2, this, 37));	
 	}
 	
 	function testFailTransferFrom() {
 		assert(actor.doTransferFrom(actor2, this, 37777));	
-	}
-	
+	}	
 
+	function testAllowance() {
+		actor2.doApprove(actor, 337);
+		assertEq(token.allowance(actor2, actor), 337);
+	}
 }
